@@ -1,0 +1,20 @@
+[
+  {
+    "email": "test@test.com"
+  },
+  {
+    "email": "fabiano@gmail.com",
+    "password": "123",
+    "id": "481b775d"
+  },
+  {
+    "email": "teste@teste.com",
+    "password": "123",
+    "id": "b8175282"
+  },
+  {
+    "email": "asdf@asdf.com",
+    "password": "123",
+    "id": "7f462b16"
+  }
+]
