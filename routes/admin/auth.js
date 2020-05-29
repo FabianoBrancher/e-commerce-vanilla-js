@@ -1,4 +1,5 @@
 const express = require('express');
+const { check, validationResult } = require('express-validator');
 const usersRepo = require('../../repositories/users');
 
 const router = express.Router();
@@ -11,25 +12,41 @@ router.get('/signup', (request, response) => {
   return response.send(signupTemplate({ request }))
 });
 
-router.post('/signup', async (request, response) => {
-  const { email, password, passwordConfirmation } = request.body;
+router.post('/signup',
+  [
+    check('email')
+      .trim()
+      .normalizeEmail()
+      .isEmail()
+      .custom(async email => {
+        const userExists = await usersRepo.getOneBy({ email });
 
-  const userExists = await usersRepo.getOneBy({ email });
+        if (userExists) {
+          throw new Error('Email in use.');
+        }
+      }),
+    check('password')
+      .trim()
+      .isLength({ min: 4, max: 20 }),
+    check('passwordConfirmation')
+      .trim()
+      .isLength({ min: 4, max: 20 }).custom((passwordConfirmation, { request }) => {
+        if (passwordConfirmation !== request.body.password) {
+          throw new Error('Passwords must match');
+        }
+      }),
+  ], async (request, response) => {
+    const errors = validationResult(request);
 
-  if (userExists) {
-    return response.send('Email in use.');
-  }
 
-  if (password !== passwordConfirmation) {
-    return response.send('Passwords must match.');
-  }
+    const { email, password, passwordConfirmation } = request.body;
 
-  const user = await usersRepo.create({ email, password });
-  request.session.userId = user.id //added by cookie session! (only exists because of cookie-session)
+    const user = await usersRepo.create({ email, password });
+    request.session.userId = user.id //added by cookie session! (only exists because of cookie-session)
 
-  return response.send('Account created!!!');
+    return response.send('Account created!!!');
 
-});
+  });
 
 router.get('/signout', (request, response) => {
   request.session = null;
