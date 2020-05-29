@@ -1,5 +1,8 @@
 const fs = require('fs');
 const crypto = require('crypto');
+const util = require('util');
+
+const scrypt = util.promisify(crypto.scrypt);
 
 class UsersRepository {
   constructor(filename) {
@@ -18,14 +21,6 @@ class UsersRepository {
   }
 
   async getAll() {
-    // // Open the file called this.filename
-    // const contents = await fs.promises.readFile(this.filename, { encoding: 'utf8' });
-    // // Read its contents
-    // // parse the contents
-    // const data = JSON.parse(contents);
-    // // return the parsed data
-    // return data;
-
     return JSON.parse(await fs.promises.readFile(this.filename, {
       encoding: 'utf8'
     }));
@@ -33,13 +28,21 @@ class UsersRepository {
 
   async create(attrs) {
     attrs.id = this.randomId();
-    const records = await this.getAll();
-    records.push(attrs);
 
-    // write the updated 'records' array back to this.filename
+    const salt = crypto.randomBytes(8).toString('hex');
+
+    const hashed = await scrypt(attrs.password, salt, 64);
+
+    const records = await this.getAll();
+    const record = {
+      ...attrs,
+      password: `${hashed.toString('hex')}.${salt}`
+    };
+    records.push(record);
+
     await this.writeAll(records);
 
-    return attrs;
+    return record;
   }
 
   async writeAll(records) {
