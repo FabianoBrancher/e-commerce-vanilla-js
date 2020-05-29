@@ -90,7 +90,9 @@ app.post('/signin', async (request, response) => {
     return response.send('Wrong Email/Password');
   }
 
-  if (user.password !== password) {
+  const validPassword = await usersRepo.comparePasswords(user.password, password);
+
+  if (!validPassword) {
     return response.send('Wrong Email/Password');
   }
 
