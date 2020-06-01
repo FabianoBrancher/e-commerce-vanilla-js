@@ -6,6 +6,8 @@ const authRouter = require('./routes/admin/auth');
 
 const app = express();
 
+app.use(express.static('public'));
+
 // const bodyParser = (request, response, next) => {
 //   if (request.method === 'POST') {
 //     request.on('data', data => {
