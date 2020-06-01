@@ -7,37 +7,27 @@ const router = express.Router();
 const signupTemplate = require('../../views/admin/auth/signup');
 const signinTemplate = require('../../views/admin/auth/signin');
 
+const {
+  requireEmail,
+  requirePassword,
+  requirePasswordConfirmation,
+  requireValidEmail,
+  requireValidPasswordForUser,
+} = require('./validators');
 
 router.get('/signup', (request, response) => {
   return response.send(signupTemplate({ request }))
 });
 
-router.post('/signup',
-  [
-    check('email')
-      .trim()
-      .normalizeEmail()
-      .isEmail()
-      .custom(async email => {
-        const userExists = await usersRepo.getOneBy({ email });
-
-        if (userExists) {
-          throw new Error('Email in use.');
-        }
-      }),
-    check('password')
-      .trim()
-      .isLength({ min: 4, max: 20 }),
-    check('passwordConfirmation')
-      .trim()
-      .isLength({ min: 4, max: 20 }).custom((passwordConfirmation, { request }) => {
-        if (passwordConfirmation !== request.body.password) {
-          throw new Error('Passwords must match');
-        }
-      }),
-  ], async (request, response) => {
+router.post(
+  '/signup',
+  [requireEmail, requirePassword, requirePasswordConfirmation],
+  async (request, response) => {
     const errors = validationResult(request);
 
+    if (!errors.isEmpty()) {
+      return response.send(signupTemplate({ request, errors }));
+    }
 
     const { email, password, passwordConfirmation } = request.body;
 
@@ -45,7 +35,6 @@ router.post('/signup',
     request.session.userId = user.id //added by cookie session! (only exists because of cookie-session)
 
     return response.send('Account created!!!');
-
   });
 
 router.get('/signout', (request, response) => {
@@ -57,25 +46,21 @@ router.get('/signin', (request, response) => {
   response.send(signinTemplate());
 });
 
-router.post('/signin', async (request, response) => {
-  const { email, password } = request.body;
-  const user = await usersRepo.getOneBy({ email });
+router.post(
+  '/signin',
+  [requireValidEmail, requireValidPasswordForUser],
+  async (request, response) => {
+    const errors = validationResult(request);
+    console.log(errors);
 
-  if (!user) {
-    return response.send('Wrong Email/Password');
-  }
+    const { email } = request.body;
+    const user = await usersRepo.getOneBy({ email });
 
-  const validPassword = await usersRepo.comparePasswords(user.password, password);
+    request.session.userId = user.id;
 
-  if (!validPassword) {
-    return response.send('Wrong Email/Password');
-  }
+    return response.send('You are signed in')
 
-  request.session.userId = user.id;
-
-  return response.send('You are signed in')
-
-});
+  });
 
 
 module.exports = router;
