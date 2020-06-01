@@ -24,6 +24,7 @@ module.exports = {
       if (passwordConfirmation !== request.body.password) {
         throw new Error('Passwords must match');
       }
+      return true;
     }),
   requireValidEmail: check('email')
     .trim()
