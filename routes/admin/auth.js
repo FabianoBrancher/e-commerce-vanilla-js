@@ -43,7 +43,7 @@ router.get('/signout', (request, response) => {
 });
 
 router.get('/signin', (request, response) => {
-  response.send(signinTemplate());
+  response.send(signinTemplate({}));
 });
 
 router.post(
@@ -51,7 +51,10 @@ router.post(
   [requireValidEmail, requireValidPasswordForUser],
   async (request, response) => {
     const errors = validationResult(request);
-    console.log(errors);
+
+    if (!errors.isEmpty()) {
+      return response.send(signinTemplate({ errors }));
+    }
 
     const { email } = request.body;
     const user = await usersRepo.getOneBy({ email });
