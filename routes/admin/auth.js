@@ -1,5 +1,5 @@
 const express = require('express');
-const { check, validationResult } = require('express-validator');
+const { handleErrors } = require('./middlewares');
 const usersRepo = require('../../repositories/users');
 
 const router = express.Router();
@@ -22,15 +22,9 @@ router.get('/signup', (request, response) => {
 router.post(
   '/signup',
   [requireEmail, requirePassword, requirePasswordConfirmation],
+  handleErrors(signupTemplate),
   async (request, response) => {
-    const errors = validationResult(request);
-
-    if (!errors.isEmpty()) {
-      return response.send(signupTemplate({ request, errors }));
-    }
-
-    const { email, password, passwordConfirmation } = request.body;
-
+    const { email, password } = request.body;
     const user = await usersRepo.create({ email, password });
     request.session.userId = user.id //added by cookie session! (only exists because of cookie-session)
 
@@ -49,20 +43,13 @@ router.get('/signin', (request, response) => {
 router.post(
   '/signin',
   [requireValidEmail, requireValidPasswordForUser],
+  handleErrors(signinTemplate),
   async (request, response) => {
-    const errors = validationResult(request);
-
-    if (!errors.isEmpty()) {
-      return response.send(signinTemplate({ errors }));
-    }
-
     const { email } = request.body;
     const user = await usersRepo.getOneBy({ email });
-
     request.session.userId = user.id;
 
     return response.send('You are signed in')
-
   });
 
 
