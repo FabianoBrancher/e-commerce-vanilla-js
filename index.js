@@ -3,6 +3,7 @@ const bodyParser = require('body-parser');
 const cookieSession = require('cookie-session');
 
 const authRouter = require('./routes/admin/auth');
+const productsRouter = require('./routes/admin/products');
 
 const app = express();
 
@@ -32,6 +33,7 @@ app.use(cookieSession({
 }))
 
 app.use(authRouter);
+app.use(productsRouter);
 
 app.listen('3333', () => {
   console.log('Listening on port 3333')
