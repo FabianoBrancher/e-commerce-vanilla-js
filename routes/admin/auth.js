@@ -28,7 +28,7 @@ router.post(
     const user = await usersRepo.create({ email, password });
     request.session.userId = user.id //added by cookie session! (only exists because of cookie-session)
 
-    return response.send('Account created!!!');
+    return response.redirect('/admin/products');
   });
 
 router.get('/signout', (request, response) => {
@@ -49,7 +49,7 @@ router.post(
     const user = await usersRepo.getOneBy({ email });
     request.session.userId = user.id;
 
-    return response.send('You are signed in')
+    return response.redirect('/admin/products');
   });
 
 
