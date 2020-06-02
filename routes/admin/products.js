@@ -48,5 +48,29 @@ router.get(
     return res.send(productsEditTemplate({ product }));
   });
 
+router.post(
+  '/admin/products/:id/edit',
+  requireAuth,
+  upload.single('image'),
+  [requireTitle, requirePrice],
+  handleErrors(productsEditTemplate),
+  async (req, res) => {
+    const { id } = req.params;
+    const changes = req.body;
+
+    if (req.file) {
+      changes.image = req.file.buffer.toString('base64');
+    }
+
+    try {
+      await productsRepo.update(id, changes);
+    } catch (error) {
+      return res.send('Could not find item');
+    }
+
+    return res.redirect('/admin/products');
+
+  });
+
 module.exports = router;
 
